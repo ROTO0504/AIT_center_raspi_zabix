@@ -1,0 +1,22 @@
+2025-09-22 17:49:51,023 - ERROR - 以下の設定値を正しい値に変更してください: CLIENT_ID, CLIENT_SECRET, TENANT_ID
+2025-09-22 17:49:51,023 - ERROR - 設定が不完全です。プログラムを終了します。
+2025-09-22 18:05:00,302 - INFO - === メールテストモードで起動します ===
+2025-09-22 18:05:00,303 - INFO - === メール接続テストを開始します ===
+2025-09-22 18:05:00,303 - INFO - アクセストークンを取得中...
+2025-09-22 18:05:00,801 - ERROR - アクセストークン取得エラー: Unable to get authority configuration for https://login.microsoftonline.com/your-tenant-id. Authority would typically be in a format of https://login.microsoftonline.com/your_tenant or https://tenant_name.ciamlogin.com or https://tenant_name.b2clogin.com/tenant.onmicrosoft.com/policy.  Also please double check your tenant name or GUID is correct.
+2025-09-22 18:05:00,801 - ERROR - アクセストークンの取得に失敗しました
+2025-09-22 18:05:00,801 - ERROR - ✗ メール接続テストに失敗しました
+2025-09-22 18:11:40,398 - INFO - === メールテストモードで起動します ===
+2025-09-22 18:11:40,398 - INFO - === メール接続テストを開始します ===
+2025-09-22 18:11:40,398 - INFO - アクセストークンを取得中...
+2025-09-22 18:11:40,600 - INFO - OAuth2認証が必要です。デバイスコードフローを開始します...
+2025-09-22 18:13:02,689 - ERROR - OAuth2認証に失敗: AADSTS7000218: The request body must contain the following parameter: 'client_assertion' or 'client_secret'. Trace ID: 3acf4b30-40e8-464a-a20d-32d7d6009000 Correlation ID: 7ae675b3-3c59-4346-9741-ee22541c61e6 Timestamp: 2025-09-22 09:13:02Z
+2025-09-22 18:13:02,690 - ERROR - アクセストークンの取得に失敗しました
+2025-09-22 18:13:02,690 - ERROR - ✗ メール接続テストに失敗しました
+2025-09-22 18:14:04,568 - INFO - === メールテストモードで起動します ===
+2025-09-22 18:14:04,568 - INFO - === メール接続テストを開始します ===
+2025-09-22 18:14:04,568 - INFO - アクセストークンを取得中...
+2025-09-22 18:14:04,791 - INFO - OAuth2認証が必要です。デバイスコードフローを開始します...
+2025-09-22 18:14:25,410 - ERROR - OAuth2認証に失敗: AADSTS7000218: The request body must contain the following parameter: 'client_assertion' or 'client_secret'. Trace ID: ba03cf3f-c968-42b0-9acf-72d63f6caf00 Correlation ID: 294ca1fc-166f-40e0-89c8-4680b3aa1aaf Timestamp: 2025-09-22 09:14:25Z
+2025-09-22 18:14:25,411 - ERROR - アクセストークンの取得に失敗しました
+2025-09-22 18:14:25,411 - ERROR - ✗ メール接続テストに失敗しました
