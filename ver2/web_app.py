@@ -230,6 +230,26 @@ HTML = """
       return wrap;
     }
 
+    function overallLabel(value) {
+      const labels = {
+        high: '問題あり',
+        normal: '正常',
+        unknown: '未判定',
+        error: 'エラー',
+      };
+      return labels[value] || value || '未判定';
+    }
+
+    function hostStatusLabel(value) {
+      const labels = {
+        problem: '問題あり',
+        warning: '警告',
+        ok: '正常',
+        unknown: '未判定',
+      };
+      return labels[value] || value || '未判定';
+    }
+
     let latestData = {};
 
     function renderGpioModal(data) {
@@ -243,7 +263,7 @@ HTML = """
 
       const rows = document.getElementById('gpioRows');
       rows.innerHTML = '';
-      ['green', 'yellow', 'buzzer', 'red'].forEach((name) => {
+      ['red'].forEach((name) => {
         const tr = document.createElement('tr');
 
         const tdName = document.createElement('td');
@@ -295,7 +315,7 @@ HTML = """
       latestData = data;
 
       const statusEl = document.getElementById('status');
-      statusEl.textContent = data.overall || 'unknown';
+      statusEl.textContent = overallLabel(data.overall);
       statusEl.className = 'status ' + (data.overall || 'unknown');
 
       const startupNote = document.getElementById('startupNote');
@@ -355,7 +375,7 @@ HTML = """
 
           const status = document.createElement('div');
           status.className = 'host-status ' + st;
-          status.textContent = (st || 'unknown').toUpperCase();
+          status.textContent = hostStatusLabel(st);
 
           top.appendChild(name);
           top.appendChild(status);

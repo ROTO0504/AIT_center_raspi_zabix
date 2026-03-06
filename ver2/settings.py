@@ -71,7 +71,7 @@ class Settings:
         open_browser = _parse_bool(os.getenv("OPEN_BROWSER"), default=True)
         scopes = _parse_scopes(os.getenv("GRAPH_SCOPES"))
         button_enabled = _parse_bool(os.getenv("BUTTON_ENABLED"), default=True)
-        button_pin = int(os.getenv("BUTTON_PIN") or 21)
+        button_pin = int(os.getenv("BUTTON_PIN") or 12)
         button_pull = (os.getenv("BUTTON_PULL") or "up").strip().lower()
         if button_pull not in ("up", "down", "off"):
             button_pull = "up"
