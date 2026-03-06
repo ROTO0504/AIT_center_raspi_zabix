@@ -32,7 +32,7 @@ class GpioLightController:
         self,
         green_pin: int = 6,
         yellow_pin: int = 13,
-        buzzer_pin: int = 19,
+        buzzer_pin: int = 5,
         red_pin: int = 26,
     ) -> None:
         self.pins = {
@@ -113,15 +113,15 @@ class GpioLightController:
             on = False
             while not self._startup_blink_stop.is_set():
                 on = not on
-                self._last_outputs["green"] = False
+                self._last_outputs["green"] = on
                 self._last_outputs["red"] = False
                 self._last_outputs["buzzer"] = False
-                self._last_outputs["yellow"] = on
+                self._last_outputs["yellow"] = False
 
-                gpio.output(green_pin, gpio.LOW)
+                gpio.output(green_pin, gpio.HIGH if on else gpio.LOW)
                 gpio.output(red_pin, gpio.LOW)
                 gpio.output(buzzer_pin, gpio.LOW)
-                gpio.output(yellow_pin, gpio.HIGH if on else gpio.LOW)
+                gpio.output(yellow_pin, gpio.LOW)
                 time.sleep(0.35)
 
         self._startup_blink_thread = threading.Thread(target=_loop, daemon=True)
@@ -133,8 +133,10 @@ class GpioLightController:
             self._startup_blink_thread.join(timeout=1.0)
         self._startup_blink_thread = None
 
+        self._last_outputs["green"] = False
         self._last_outputs["yellow"] = False
         if self._enabled and self._gpio:
+            self._gpio.output(self.pins["green"], self._gpio.LOW)
             self._gpio.output(self.pins["yellow"], self._gpio.LOW)
 
     def buzz(self, times: int, on_sec: float = 0.12, off_sec: float = 0.08) -> None:
@@ -204,7 +206,7 @@ class MailLightMonitor:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.client = GraphClient(settings)
-        self.gpio = GpioLightController()
+        self.gpio = GpioLightController(buzzer_pin=settings.buzzer_pin)
         self._lock = threading.Lock()
         self._state = LightState(
             overall="unknown",
@@ -212,7 +214,7 @@ class MailLightMonitor:
             updated_at=self._now_iso(),
             mail_subject="",
             mail_received_at="",
-            leds={"green": False, "yellow": True, "buzzer": False, "red": False},
+            leds={"green": True, "yellow": False, "buzzer": False, "red": False},
             host_states={},
             host_metrics={},
             gpio_status=self.gpio.get_status(),

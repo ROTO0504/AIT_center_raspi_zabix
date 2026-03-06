@@ -35,6 +35,7 @@ class Settings:
     pi_top: int
     open_browser: bool
     scopes: Optional[List[str]]
+    buzzer_pin: int
     button_enabled: bool
     button_pin: int
     button_pull: str
@@ -64,12 +65,13 @@ class Settings:
 
         poll_interval = int(os.getenv("POLL_INTERVAL") or 30)
         mail_poll_interval = float(
-            os.getenv("MAIL_POLL_INTERVAL") or os.getenv("POLL_INTERVAL") or 5
+            os.getenv("MAIL_POLL_INTERVAL") or os.getenv("POLL_INTERVAL") or 3
         )
         test_top = int(os.getenv("TEST_TOP") or 100)
         pi_top = int(os.getenv("PI_TOP") or 10)
         open_browser = _parse_bool(os.getenv("OPEN_BROWSER"), default=True)
         scopes = _parse_scopes(os.getenv("GRAPH_SCOPES"))
+        buzzer_pin = int(os.getenv("BUZZER_PIN") or 5)
         button_enabled = _parse_bool(os.getenv("BUTTON_ENABLED"), default=True)
         button_pin = int(os.getenv("BUTTON_PIN") or 12)
         button_pull = (os.getenv("BUTTON_PULL") or "up").strip().lower()
@@ -92,6 +94,7 @@ class Settings:
             pi_top=pi_top,
             open_browser=open_browser,
             scopes=scopes,
+            buzzer_pin=buzzer_pin,
             button_enabled=button_enabled,
             button_pin=button_pin,
             button_pull=button_pull,

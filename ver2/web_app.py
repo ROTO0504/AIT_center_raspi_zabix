@@ -47,9 +47,9 @@ HTML = """
       margin: 0 0 12px;
       padding: 8px 12px;
       border-radius: 8px;
-      background: #fff8e1;
-      border: 1px solid #f5d17a;
-      color: #7a5a00;
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
+      color: #1b5e20;
       font-size: 14px;
       font-weight: 600;
     }
@@ -57,6 +57,60 @@ HTML = """
     .item { background:#fafafa; border:1px solid #ececec; border-radius:8px; padding:14px; }
     .label { font-size:12px; color:#666; }
     .val { font-size:18px; font-weight:600; word-break:break-word; }
+    .button-item {
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .button-state-card {
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .button-state-badge {
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      width:fit-content;
+      min-height:52px;
+      padding:10px 16px;
+      border-radius:999px;
+      border:1px solid #d8dbe1;
+      background:#f3f4f6;
+      font-size:20px;
+      font-weight:700;
+      color:#444;
+    }
+    .button-state-badge.pressed {
+      background:#ffebee;
+      border-color:#ef9a9a;
+      color:#b71c1c;
+      box-shadow:0 0 0 4px rgba(198,40,40,.08);
+    }
+    .button-state-badge.released {
+      background:#e8f5e9;
+      border-color:#a5d6a7;
+      color:#1b5e20;
+    }
+    .button-state-badge.unknown {
+      background:#f5f5f5;
+      border-color:#d6d6d6;
+      color:#666;
+    }
+    .button-state-dot {
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:currentColor;
+      box-shadow:0 0 0 6px rgba(255,255,255,.45);
+      flex:0 0 auto;
+    }
+    .button-state-sub {
+      font-size:13px;
+      line-height:1.5;
+      color:#555;
+      font-weight:600;
+    }
     .row {
       display:grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -169,14 +223,23 @@ HTML = """
 <body>
   <div class="card">
     <h1>zabix状態モニター</h1>
-    <div id="startupNote" class="startup-note">起動中: 黄色点滅で初回判定を待機しています。</div>
+    <div id="startupNote" class="startup-note">起動中: 緑点滅で初回判定を待機しています。</div>
     <div id="status" class="status">loading...</div>
     <div class="grid">
       <div class="item"><div class="label">原因</div><div id="reason" class="val">-</div></div>
       <div class="item"><div class="label">判定更新時刻</div><div id="updated" class="val">-</div></div>
       <div class="item"><div class="label">対象メール件名</div><div id="subject" class="val">-</div></div>
       <div class="item"><div class="label">対象メール受信時刻</div><div id="received" class="val">-</div></div>
-      <div class="item"><div class="label">ボタン状態</div><div id="buttonInfo" class="val">-</div></div>
+      <div class="item button-item">
+        <div class="label">ボタン状態</div>
+        <div class="button-state-card">
+          <div id="buttonStateBadge" class="button-state-badge unknown">
+            <span class="button-state-dot"></span>
+            <span id="buttonStateText">確認中</span>
+          </div>
+          <div id="buttonStateSub" class="button-state-sub">-</div>
+        </div>
+      </div>
       <div class="item"><div class="label">最終押下時刻</div><div id="buttonLast" class="val">-</div></div>
     </div>
     <h3>ライト</h3>
@@ -334,10 +397,26 @@ HTML = """
       const configured = !!buttonStatus.configured;
       const silenced = !!buttonStatus.silenced;
       const pressedNow = !!buttonStatus.is_pressed;
-      const buttonLabel = configured
-        ? ('PIN ' + (buttonStatus.pin ?? '-') + ' / ' + (buttonStatus.pull || '-') + (pressedNow ? ' / 押下中' : ' / 未押下') + (silenced ? ' / 消灯中' : ' / 通常'))
-        : '未設定';
-      document.getElementById('buttonInfo').textContent = buttonLabel;
+      const buttonStateBadge = document.getElementById('buttonStateBadge');
+      const buttonStateText = document.getElementById('buttonStateText');
+      const buttonStateSub = document.getElementById('buttonStateSub');
+      let buttonBadgeClass = 'button-state-badge unknown';
+      let buttonMainText = '未設定';
+      let buttonSubText = 'ボタン入力は未設定です';
+
+      if (configured) {
+        buttonMainText = pressedNow ? '押されています' : '押されていません';
+        buttonBadgeClass = pressedNow
+          ? 'button-state-badge pressed'
+          : 'button-state-badge released';
+        buttonSubText = 'PIN ' + (buttonStatus.pin ?? '-') +
+          ' / pull-' + (buttonStatus.pull || '-') +
+          (silenced ? ' / 消灯中' : ' / 通常');
+      }
+
+      buttonStateBadge.className = buttonBadgeClass;
+      buttonStateText.textContent = buttonMainText;
+      buttonStateSub.textContent = buttonSubText;
       document.getElementById('buttonLast').textContent =
         buttonStatus.last_pressed_at || '-';
 
@@ -436,7 +515,7 @@ HTML = """
     });
 
     refresh();
-    setInterval(refresh, 1000);
+    setInterval(refresh, 500);
   </script>
 </body>
 </html>
