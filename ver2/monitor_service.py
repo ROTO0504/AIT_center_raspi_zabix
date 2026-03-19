@@ -1,12 +1,41 @@
 import re
 import threading
 import time
+from collections import deque
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import Deque, Dict, List, Optional, Tuple
 
 from graph_client import GraphClient
 from settings import Settings
+
+
+class LogBuffer:
+    def __init__(self, maxlen: int = 300) -> None:
+        self._entries: Deque[Dict[str, str]] = deque(maxlen=maxlen)
+        self._lock = threading.Lock()
+
+    def _add(self, level: str, message: str) -> None:
+        entry = {
+            "at": datetime.now().isoformat(timespec="seconds"),
+            "level": level,
+            "msg": message,
+        }
+        with self._lock:
+            self._entries.append(entry)
+
+    def info(self, message: str) -> None:
+        self._add("INFO", message)
+
+    def warn(self, message: str) -> None:
+        self._add("WARN", message)
+
+    def error(self, message: str) -> None:
+        self._add("ERROR", message)
+
+    def get(self) -> List[Dict[str, str]]:
+        with self._lock:
+            return list(reversed(self._entries))
 
 
 @dataclass
@@ -207,6 +236,7 @@ class MailLightMonitor:
         self.settings = settings
         self.client = GraphClient(settings)
         self.gpio = GpioLightController(buzzer_pin=settings.buzzer_pin)
+        self.log = LogBuffer()
         self._lock = threading.Lock()
         self._state = LightState(
             overall="unknown",
@@ -295,6 +325,7 @@ class MailLightMonitor:
     def _handle_button_press(self) -> None:
         self._button_last_pressed_at = self._now_iso()
         self._silenced_by_button = True
+        self.log.info("ボタン押下: 全LED消灯")
         self.gpio.stop_startup_blink()
         self.gpio.apply_main_lights(self._silenced_leds())
         self.gpio.buzz(1, on_sec=0.5, off_sec=0.0)
@@ -491,6 +522,12 @@ class MailLightMonitor:
             if severity:
                 metric["severity"] = severity
 
+            sev_label = f" severity={severity}" if severity else ""
+            self.log.info(
+                f"[初回] host={host} status={status}{sev_label}"
+                f" / {subject}"
+            )
+
             if status == "problem":
                 metric["problem_started_at"] = received
                 metric["ongoing_problem_seconds"] = None
@@ -518,6 +555,7 @@ class MailLightMonitor:
 
         self._host_states = host_states
         overall, leds, reason = self._aggregate(host_states)
+        self.log.info(f"初回判定完了: overall={overall} / {reason}")
         effective_leds = leds
         if self._silenced_by_button:
             effective_leds = self._silenced_leds()
@@ -571,6 +609,12 @@ class MailLightMonitor:
             if severity:
                 metric["severity"] = severity
 
+            sev_label = f" severity={severity}" if severity else ""
+            self.log.info(
+                f"新規メール: host={host} status={status}{sev_label}"
+                f" / {subject}"
+            )
+
             if status == "problem":
                 metric["problem_started_at"] = received
                 metric["ongoing_problem_seconds"] = None
@@ -603,6 +647,7 @@ class MailLightMonitor:
             if overall == "high":
                 self.gpio.buzz(2, off_sec=0.2)
             reason = f"{host} が {status} に更新されました。"
+            self.log.info(f"判定更新: overall={overall} / {reason}")
             return LightState(
                 overall=overall,
                 reason=reason,
@@ -637,14 +682,19 @@ class MailLightMonitor:
             button_status=self._button_status_view(),
         )
 
+    def get_logs(self) -> List[Dict[str, str]]:
+        return self.log.get()
+
     def refresh_once(self) -> Dict[str, object]:
         top_n = max(self.settings.test_top, self.settings.pi_top)
+        self.log.info(f"メール取得: 最大{top_n}件")
         messages = self.client.get_messages(
             top=top_n,
             folder=self.settings.mail_folder,
             recipient=self.settings.target_recipient,
             unread_only=False,
         )
+        self.log.info(f"メール取得完了: {len(messages)}件")
         if not self._initialized:
             new_state = self._build_snapshot_state(messages)
             self.gpio.stop_startup_blink()
@@ -667,6 +717,7 @@ class MailLightMonitor:
             try:
                 self.refresh_once()
             except Exception as exc:
+                self.log.error(f"メール取得/判定でエラー: {exc}")
                 with self._lock:
                     self._state = LightState(
                         overall="error",

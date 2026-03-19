@@ -173,6 +173,29 @@ HTML = """
       cursor: pointer;
       font-size: 14px;
     }
+    .log-section { margin-top: 20px; }
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+    }
+    .log-table th {
+      text-align: left;
+      font-size: 11px;
+      color: #888;
+      padding: 4px 8px;
+      border-bottom: 1px solid #e4e4e4;
+    }
+    .log-table td {
+      padding: 4px 8px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: top;
+    }
+    .log-table tr:hover td { background: #fafafa; }
+    .log-level-INFO { color: #1565c0; font-weight: 700; }
+    .log-level-WARN { color: #e65100; font-weight: 700; }
+    .log-level-ERROR { color: #c62828; font-weight: 700; }
     .modal {
       position: fixed;
       inset: 0;
@@ -252,6 +275,16 @@ HTML = """
 
     <div class="toolbar">
       <button id="openGpio" class="btn" type="button">GPIOステータス</button>
+    </div>
+
+    <div class="log-section">
+      <h3>ログ</h3>
+      <table class="log-table">
+        <thead>
+          <tr><th>時刻</th><th>レベル</th><th>メッセージ</th></tr>
+        </thead>
+        <tbody id="logRows"></tbody>
+      </table>
     </div>
   </div>
 
@@ -514,8 +547,31 @@ HTML = """
       }
     });
 
+    async function refreshLogs() {
+      const res = await fetch('/api/logs', { cache: 'no-store' });
+      const logs = await res.json();
+      const tbody = document.getElementById('logRows');
+      tbody.innerHTML = '';
+      logs.forEach((entry) => {
+        const tr = document.createElement('tr');
+        const tdAt = document.createElement('td');
+        tdAt.textContent = entry.at;
+        tr.appendChild(tdAt);
+        const tdLevel = document.createElement('td');
+        tdLevel.textContent = entry.level;
+        tdLevel.className = 'log-level-' + entry.level;
+        tr.appendChild(tdLevel);
+        const tdMsg = document.createElement('td');
+        tdMsg.textContent = entry.msg;
+        tr.appendChild(tdMsg);
+        tbody.appendChild(tr);
+      });
+    }
+
     refresh();
+    refreshLogs();
     setInterval(refresh, 500);
+    setInterval(refreshLogs, 2000);
   </script>
 </body>
 </html>
@@ -542,6 +598,10 @@ def create_app() -> Flask:
     @app.get("/api/status")
     def api_status():
         return jsonify(monitor.get_state())
+
+    @app.get("/api/logs")
+    def api_logs():
+        return jsonify(monitor.get_logs())
 
     return app
 
