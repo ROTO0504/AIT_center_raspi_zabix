@@ -394,7 +394,7 @@ class MailLightMonitor:
 
     @staticmethod
     def _extract_severity(body: str) -> str:
-        m = re.search(r"\bSeverity\s*:\s*([^<]+)", body, flags=re.IGNORECASE)
+        m = re.search(r"\bSeverity\s*:\s*([^\s<]+)", body, flags=re.IGNORECASE)
         if m:
             return m.group(1).strip()
         return ""

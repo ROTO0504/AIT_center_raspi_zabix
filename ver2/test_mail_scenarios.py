@@ -307,6 +307,7 @@ def _build_settings() -> Settings:
         pi_top=10,
         open_browser=False,
         scopes=None,
+        buzzer_pin=5,
         button_enabled=False,
         button_pin=21,
         button_pull="up",
