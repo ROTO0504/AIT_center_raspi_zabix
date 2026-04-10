@@ -140,6 +140,18 @@ HTML = """
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap:12px;
     }
+    .host-section-label {
+      grid-column: 1 / -1;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 0 2px;
+      border-bottom: 1px solid #e4e4e4;
+      margin-top: 4px;
+      color: #888;
+    }
+    .host-section-label.alert { color: #c62828; border-color: #ef9a9a; }
     .host-card {
       border:1px solid #e4e4e4;
       border-radius:10px;
@@ -463,14 +475,26 @@ HTML = """
       hosts.innerHTML = '';
       const hostStates = data.host_states || {};
       const hostMetrics = data.host_metrics || {};
-      const entries = Object.entries(hostStates);
+      const ORDER = { problem: 0, warning: 1, ok: 2, unknown: 3 };
+      const entries = Object.entries(hostStates).sort(
+        ([, a], [, b]) => (ORDER[a] ?? 9) - (ORDER[b] ?? 9)
+      );
       if (entries.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'host-card';
         empty.textContent = 'ホスト状態なし';
         hosts.appendChild(empty);
       } else {
+        let lastGroup = null;
         entries.forEach(([host, st]) => {
+          const group = (st === 'problem' || st === 'warning') ? 'alert' : 'normal';
+          if (group !== lastGroup) {
+            const label = document.createElement('div');
+            label.className = 'host-section-label' + (group === 'alert' ? ' alert' : '');
+            label.textContent = group === 'alert' ? '問題あり' : '正常・その他';
+            hosts.appendChild(label);
+            lastGroup = group;
+          }
           const metric = hostMetrics[host] || {};
           const card = document.createElement('div');
           card.className = 'host-card';

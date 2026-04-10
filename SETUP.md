@@ -1,7 +1,7 @@
 # 環境
 
 - uv を使用しています
-- ver2/mailRead.py が本体メール確認ようです
+- start_system.py が本体です
 - .env にて以下の値を設定してください
   - APP_ID
   - OBJECT_ID
@@ -15,7 +15,7 @@
 `start_system.py` をラズパイ起動時に自動起動するには、`systemd` サービスを登録します。
 
 ```bash
-cd /home/raspi/Desktop/Mail2AlertLight/ver2
+cd /home/raspi/Desktop/Mail2AlertLight
 sudo bash install_autostart.sh
 ```
 

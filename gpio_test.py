@@ -31,7 +31,6 @@ DEFAULT_BUTTON_PULL = "up"
 def _load_defaults() -> tuple[int, int, int, int, str]:
     for env_path in (
         Path(__file__).with_name(".env"),
-        Path(__file__).resolve().parent.parent / "ver2" / ".env",
         Path.cwd() / ".env",
     ):
         load_env(env_path)

@@ -9,3 +9,6 @@ wheels/
 # Virtual environments
 .venv
 *.env
+
+# Token cache
+msal_token_cache.bin
