@@ -591,6 +591,7 @@ class MailLightMonitor:
             body_text = self._strip_html(body)
             status = self._detect_status(subject, body_text)
             if not status:
+                self.log.warn(f"未分類メール: {subject}")
                 continue
 
             host = self._extract_host(subject, body_text)
@@ -644,7 +645,7 @@ class MailLightMonitor:
             host, status, subject, received = events[-1]
             self._silenced_by_button = False
             self.gpio.apply_main_lights(leds)
-            if overall == "high":
+            if overall == "high" and status != "ok":
                 self.gpio.buzz(2, off_sec=0.2)
             reason = f"{host} が {status} に更新されました。"
             self.log.info(f"判定更新: overall={overall} / {reason}")
@@ -687,14 +688,12 @@ class MailLightMonitor:
 
     def refresh_once(self) -> Dict[str, object]:
         top_n = max(self.settings.test_top, self.settings.pi_top)
-        self.log.info(f"メール取得: 最大{top_n}件")
         messages = self.client.get_messages(
             top=top_n,
             folder=self.settings.mail_folder,
             recipient=self.settings.target_recipient,
             unread_only=False,
         )
-        self.log.info(f"メール取得完了: {len(messages)}件")
         if not self._initialized:
             new_state = self._build_snapshot_state(messages)
             self.gpio.stop_startup_blink()
