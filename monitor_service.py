@@ -328,7 +328,7 @@ class MailLightMonitor:
         self.log.info("ボタン押下: 全LED消灯")
         self.gpio.stop_startup_blink()
         self.gpio.apply_main_lights(self._silenced_leds())
-        self.gpio.buzz(1, on_sec=0.5, off_sec=0.0)
+        self.gpio.buzz(1, on_sec=0.1, off_sec=0.0)
         with self._lock:
             self._state.leds = self._silenced_leds()
             self._state.button_status = self._button_status_view()
