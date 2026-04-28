@@ -1,10 +1,36 @@
 import os
+import subprocess
 import threading
 
 from flask import Flask, jsonify, render_template_string
 
 from monitor_service import MailLightMonitor
 from settings import Settings
+
+
+def _get_running_commit() -> dict:
+    base = os.path.dirname(os.path.abspath(__file__))
+    try:
+        short = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"], cwd=base, text=True, timeout=2
+        ).strip()
+        full = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=base, text=True, timeout=2
+        ).strip()
+        subject = subprocess.check_output(
+            ["git", "log", "-1", "--format=%s"], cwd=base, text=True, timeout=2
+        ).strip()
+        committed_at = subprocess.check_output(
+            ["git", "log", "-1", "--format=%ci"], cwd=base, text=True, timeout=2
+        ).strip()
+        return {
+            "short": short,
+            "full": full,
+            "subject": subject,
+            "committed_at": committed_at,
+        }
+    except Exception:
+        return {"short": "unknown", "full": "", "subject": "", "committed_at": ""}
 
 
 HTML = """
@@ -276,6 +302,7 @@ HTML = """
         </div>
       </div>
       <div class="item"><div class="label">最終押下時刻</div><div id="buttonLast" class="val">-</div></div>
+      <div class="item"><div class="label">動作中バージョン</div><div id="version" class="val">-</div></div>
     </div>
     <h3>ライト</h3>
     <div class="row" id="leds"></div>
@@ -592,8 +619,25 @@ HTML = """
       });
     }
 
+    async function loadVersion() {
+      try {
+        const res = await fetch('/api/version', { cache: 'no-store' });
+        const v = await res.json();
+        const el = document.getElementById('version');
+        if (!v.short || v.short === 'unknown') {
+          el.textContent = 'unknown';
+          return;
+        }
+        const date = (v.committed_at || '').split(' ').slice(0, 2).join(' ');
+        el.textContent = v.short + (v.subject ? ' — ' + v.subject : '') + (date ? ' (' + date + ')' : '');
+      } catch (e) {
+        document.getElementById('version').textContent = 'unknown';
+      }
+    }
+
     refresh();
     refreshLogs();
+    loadVersion();
     setInterval(refresh, 500);
     setInterval(refreshLogs, 2000);
   </script>
@@ -605,6 +649,7 @@ HTML = """
 def create_app() -> Flask:
     settings = Settings.from_env()
     monitor = MailLightMonitor(settings)
+    version_info = _get_running_commit()
 
     app = Flask(__name__)
 
@@ -626,6 +671,10 @@ def create_app() -> Flask:
     @app.get("/api/logs")
     def api_logs():
         return jsonify(monitor.get_logs())
+
+    @app.get("/api/version")
+    def api_version():
+        return jsonify(version_info)
 
     return app
 

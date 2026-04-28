@@ -75,6 +75,10 @@ sudo systemctl stop mail2alertlight     # 停止
 sudo systemctl disable mail2alertlight  # 無効化
 ```
 
+### 5. Mac からのデプロイ
+
+Mac リポジトリルートで `./deploy.sh` を実行すると、push → ラズパイで pull → 依存更新 → サービス再起動 まで一括で行う。詳細は `SETUP.md` を参照。
+
 ## 動作仕様
 
 - `high` / `disaster` レベルのアラート検出 → 赤 LED 点灯 + ブザー 2 回

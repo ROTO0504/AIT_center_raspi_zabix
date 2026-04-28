@@ -115,6 +115,17 @@ def create_app() -> Flask:
     def api_logs():
         return jsonify(list(reversed(LOGS)))
 
+    @app.get("/api/version")
+    def api_version():
+        return jsonify(
+            {
+                "short": "dev-mock",
+                "full": "dev-mock",
+                "subject": "ローカル開発サーバ",
+                "committed_at": _now_iso().replace("T", " "),
+            }
+        )
+
     return app
 
 
