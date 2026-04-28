@@ -213,6 +213,23 @@ HTML = """
       font-size: 14px;
     }
     .log-section { margin-top: 20px; }
+    .log-summary {
+      cursor: pointer;
+      font-size: 1.17em;
+      font-weight: bold;
+      margin: 1em 0 0.5em;
+      list-style: none;
+      user-select: none;
+    }
+    .log-summary::-webkit-details-marker { display: none; }
+    .log-summary::before {
+      content: "▶";
+      display: inline-block;
+      margin-right: 8px;
+      font-size: 0.7em;
+      transition: transform 0.15s;
+    }
+    .log-section[open] .log-summary::before { transform: rotate(90deg); }
     .log-table {
       width: 100%;
       border-collapse: collapse;
@@ -317,15 +334,15 @@ HTML = """
       <button id="openGpio" class="btn" type="button">GPIOステータス</button>
     </div>
 
-    <div class="log-section">
-      <h3>ログ</h3>
+    <details class="log-section" open>
+      <summary class="log-summary">ログ</summary>
       <table class="log-table">
         <thead>
           <tr><th>時刻</th><th>レベル</th><th>メッセージ</th></tr>
         </thead>
         <tbody id="logRows"></tbody>
       </table>
-    </div>
+    </details>
   </div>
 
   <div id="gpioModal" class="modal" role="dialog" aria-modal="true">
