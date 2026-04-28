@@ -132,6 +132,30 @@ class GraphClient:
             "Content-Type": "application/json",
         }
 
+    def fetch_secret_expiries(self) -> Optional[List[str]]:
+        """このアプリの passwordCredentials.endDateTime の ISO 文字列リストを返す。
+        Application.Read.All 権限が必要。失敗時は None。
+        """
+        if not self.use_confidential:
+            return None
+        try:
+            token = self.acquire_token()["access_token"]
+            url = (
+                f"{GRAPH_BASE}/applications"
+                f"?$filter=appId eq '{self.settings.client_id}'"
+                f"&$select=passwordCredentials"
+            )
+            resp = requests.get(url, headers=self._headers(token), timeout=10)
+            if resp.status_code != 200:
+                return None
+            apps = resp.json().get("value", [])
+            if not apps:
+                return None
+            creds = apps[0].get("passwordCredentials") or []
+            return [c.get("endDateTime") for c in creds if c.get("endDateTime")]
+        except Exception:
+            return None
+
     def get_messages(
         self,
         top: int,

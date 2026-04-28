@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import List, Optional
 
@@ -40,6 +41,7 @@ class Settings:
     button_pin: int
     button_pull: str
     button_poll_interval: float
+    client_secret_expires_at: Optional[date]
 
     @classmethod
     def from_env(cls, env_path: Optional[Path] = None) -> "Settings":
@@ -79,6 +81,12 @@ class Settings:
             button_pull = "up"
         button_poll_interval = float(os.getenv("BUTTON_POLL_INTERVAL") or 0.1)
 
+        expires_raw = (os.getenv("CLIENT_SECRET_EXPIRES_AT") or "").strip()
+        try:
+            client_secret_expires_at = date.fromisoformat(expires_raw) if expires_raw else None
+        except ValueError:
+            client_secret_expires_at = None
+
         return cls(
             client_id=client_id,
             tenant_id=tenant_id,
@@ -99,4 +107,5 @@ class Settings:
             button_pin=button_pin,
             button_pull=button_pull,
             button_poll_interval=button_poll_interval,
+            client_secret_expires_at=client_secret_expires_at,
         )

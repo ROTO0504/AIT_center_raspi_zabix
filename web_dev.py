@@ -71,6 +71,7 @@ def _mock_state() -> dict:
         for i, (host, st) in enumerate(host_states.items())
     }
 
+    mock_expiry = (datetime.now() + timedelta(days=5)).date().isoformat()
     return {
         "overall": overall,
         "reason": reason,
@@ -95,6 +96,11 @@ def _mock_state() -> dict:
             "is_pressed": False,
             "silenced": False,
             "last_pressed_at": "-",
+        },
+        "client_secret_warning": {
+            "expires_at": mock_expiry,
+            "days_left": 5,
+            "expired": False,
         },
     }
 

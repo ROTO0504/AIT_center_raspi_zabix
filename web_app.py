@@ -1,11 +1,42 @@
 import os
 import subprocess
 import threading
+from datetime import date, datetime
 
 from flask import Flask, jsonify, render_template_string
 
+from graph_client import GraphClient
 from monitor_service import MailLightMonitor
 from settings import Settings
+
+
+def _pick_active_expiry(iso_dates):
+    today = date.today()
+    parsed = []
+    for s in iso_dates or []:
+        if not s:
+            continue
+        try:
+            parsed.append(datetime.fromisoformat(s.replace("Z", "+00:00")).date())
+        except Exception:
+            continue
+    if not parsed:
+        return None
+    future = [d for d in parsed if d >= today]
+    return min(future) if future else max(parsed)
+
+
+def _calc_secret_warning(expires_at):
+    if not expires_at:
+        return None
+    days_left = (expires_at - date.today()).days
+    if days_left > 7:
+        return None
+    return {
+        "expires_at": expires_at.isoformat(),
+        "days_left": days_left,
+        "expired": days_left < 0,
+    }
 
 
 def _get_running_commit() -> dict:
@@ -79,6 +110,22 @@ HTML = """
       color: #1b5e20;
       font-size: 14px;
       font-weight: 600;
+    }
+    .secret-warning {
+      display: none;
+      margin: 0 0 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #fff8e1;
+      border: 1px solid #f9a825;
+      color: #6d4c00;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .secret-warning.danger {
+      background: #ffebee;
+      border-color: #c62828;
+      color: #b71c1c;
     }
     .grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
     .item { background:#fafafa; border:1px solid #ececec; border-radius:8px; padding:14px; }
@@ -303,6 +350,7 @@ HTML = """
   <div class="card">
     <h1>zabix状態モニター</h1>
     <div id="startupNote" class="startup-note">起動中: 緑点滅で初回判定を待機しています。</div>
+    <div id="secretWarning" class="secret-warning"></div>
     <div id="status" class="status">loading...</div>
     <div class="grid">
       <div class="item"><div class="label">原因</div><div id="reason" class="val">-</div></div>
@@ -476,6 +524,25 @@ HTML = """
         startupNote.style.display = 'block';
       } else {
         startupNote.style.display = 'none';
+      }
+
+      const sw = data.client_secret_warning;
+      const swEl = document.getElementById('secretWarning');
+      if (sw) {
+        const dl = sw.days_left;
+        let msg;
+        if (sw.expired) {
+          msg = '⚠ クライアントシークレットの有効期限が切れています（' + sw.expires_at + '、' + Math.abs(dl) + '日経過）。直ちに再発行してください。';
+        } else if (dl === 0) {
+          msg = '⚠ クライアントシークレットは本日（' + sw.expires_at + '）期限切れです。直ちに再発行してください。';
+        } else {
+          msg = '⚠ クライアントシークレットの有効期限まで残り ' + dl + ' 日（' + sw.expires_at + '）。早めに再発行してください。';
+        }
+        swEl.textContent = msg;
+        swEl.className = 'secret-warning' + ((sw.expired || dl <= 1) ? ' danger' : '');
+        swEl.style.display = 'block';
+      } else {
+        swEl.style.display = 'none';
       }
 
       document.getElementById('reason').textContent = data.reason || '-';
@@ -668,6 +735,7 @@ def create_app() -> Flask:
     settings = Settings.from_env()
     monitor = MailLightMonitor(settings)
     version_info = _get_running_commit()
+    expiry_store = {"auto": None}
 
     app = Flask(__name__)
 
@@ -678,13 +746,28 @@ def create_app() -> Flask:
     )
     poller.start()
 
+    def _bg_fetch_expiry():
+        try:
+            graph = GraphClient(settings)
+            expiries = graph.fetch_secret_expiries()
+            picked = _pick_active_expiry(expiries) if expiries else None
+            if picked:
+                expiry_store["auto"] = picked
+        except Exception:
+            pass
+
+    threading.Thread(target=_bg_fetch_expiry, daemon=True).start()
+
     @app.get("/")
     def index():
         return render_template_string(HTML)
 
     @app.get("/api/status")
     def api_status():
-        return jsonify(monitor.get_state())
+        state = monitor.get_state()
+        expires_at = expiry_store["auto"] or settings.client_secret_expires_at
+        state["client_secret_warning"] = _calc_secret_warning(expires_at)
+        return jsonify(state)
 
     @app.get("/api/logs")
     def api_logs():
