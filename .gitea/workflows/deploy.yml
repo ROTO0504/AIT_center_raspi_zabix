@@ -1,0 +1,19 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: raspi
+    steps:
+      - name: 本番ディレクトリを最新コミットに更新
+        run: |
+          set -euxo pipefail
+          cd /home/raspi/Desktop/Mail2AlertLight
+          git fetch AIT-center-mac
+          git reset --hard AIT-center-mac/main
+          .venv/bin/pip install -r requirements.txt
+          sudo systemctl restart mail2alertlight
+          sudo systemctl is-active mail2alertlight
