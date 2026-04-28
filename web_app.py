@@ -777,6 +777,22 @@ def create_app() -> Flask:
     def api_version():
         return jsonify(version_info)
 
+    @app.get("/api/secret_status")
+    def api_secret_status():
+        auto = expiry_store["auto"]
+        env = settings.client_secret_expires_at
+        used = auto or env
+        days_left = (used - date.today()).days if used else None
+        return jsonify(
+            {
+                "auto": auto.isoformat() if auto else None,
+                "env": env.isoformat() if env else None,
+                "used": used.isoformat() if used else None,
+                "source": "auto" if auto else ("env" if env else None),
+                "days_left": days_left,
+            }
+        )
+
     return app
 
 
