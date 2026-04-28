@@ -10,18 +10,19 @@ from settings import Settings
 
 def _get_running_commit() -> dict:
     base = os.path.dirname(os.path.abspath(__file__))
+    git = ["git", "-c", f"safe.directory={base}"]
     try:
         short = subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"], cwd=base, text=True, timeout=2
+            git + ["rev-parse", "--short", "HEAD"], cwd=base, text=True, timeout=2
         ).strip()
         full = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=base, text=True, timeout=2
+            git + ["rev-parse", "HEAD"], cwd=base, text=True, timeout=2
         ).strip()
         subject = subprocess.check_output(
-            ["git", "log", "-1", "--format=%s"], cwd=base, text=True, timeout=2
+            git + ["log", "-1", "--format=%s"], cwd=base, text=True, timeout=2
         ).strip()
         committed_at = subprocess.check_output(
-            ["git", "log", "-1", "--format=%ci"], cwd=base, text=True, timeout=2
+            git + ["log", "-1", "--format=%ci"], cwd=base, text=True, timeout=2
         ).strip()
         return {
             "short": short,
