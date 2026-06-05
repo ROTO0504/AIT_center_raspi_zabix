@@ -241,6 +241,8 @@ class MailLightMonitor:
             is_raspberry_pi() if settings.run_mode == "auto" else settings.run_mode == "raspi"
         )
         self.log = LogBuffer()
+        # Serialize GPIO writes with state transitions so the button watcher
+        # and monitor loop cannot overwrite each other's output decisions.
         self._lock = threading.Lock()
         self._state = LightState(
             overall="unknown",
@@ -337,13 +339,13 @@ class MailLightMonitor:
         self._button_thread.start()
 
     def _handle_button_press(self) -> None:
-        self._button_last_pressed_at = self._now_iso()
-        self._silenced_by_button = True
-        self.log.info("ボタン押下: 全LED消灯")
-        self.gpio.stop_startup_blink()
-        self.gpio.apply_main_lights(self._silenced_leds())
-        self.gpio.buzz(1, on_sec=0.1, off_sec=0.0)
         with self._lock:
+            self._button_last_pressed_at = self._now_iso()
+            self._silenced_by_button = True
+            self.log.info("ボタン押下: 全LED消灯")
+            self.gpio.stop_startup_blink()
+            self.gpio.apply_main_lights(self._silenced_leds())
+            self.gpio.buzz(1, on_sec=0.1, off_sec=0.0)
             self._state.leds = self._silenced_leds()
             self._state.button_status = self._button_status_view()
 
@@ -721,14 +723,14 @@ class MailLightMonitor:
             recipient=self.settings.target_recipient,
             unread_only=self.settings.unread_only,
         )
-        if not self._initialized:
-            new_state = self._build_snapshot_state(messages)
-            self.gpio.stop_startup_blink()
-            self.gpio.apply_main_lights(new_state.leds)
-            self._initialized = True
-        else:
-            new_state = self._process_incremental(messages)
         with self._lock:
+            if not self._initialized:
+                new_state = self._build_snapshot_state(messages)
+                self.gpio.stop_startup_blink()
+                self.gpio.apply_main_lights(new_state.leds)
+                self._initialized = True
+            else:
+                new_state = self._process_incremental(messages)
             self._state = new_state
             return self._state.to_dict()
 
