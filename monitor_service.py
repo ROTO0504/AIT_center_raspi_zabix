@@ -8,6 +8,7 @@ from typing import Deque, Dict, List, Optional, Tuple
 
 from graph_client import GraphClient
 from settings import Settings
+from utils import is_raspberry_pi
 
 
 class LogBuffer:
@@ -236,6 +237,9 @@ class MailLightMonitor:
         self.settings = settings
         self.client = GraphClient(settings)
         self.gpio = GpioLightController(buzzer_pin=settings.buzzer_pin)
+        self._running_on_pi = (
+            is_raspberry_pi() if settings.run_mode == "auto" else settings.run_mode == "raspi"
+        )
         self.log = LogBuffer()
         self._lock = threading.Lock()
         self._state = LightState(
@@ -312,8 +316,18 @@ class MailLightMonitor:
 
         def _watch_loop() -> None:
             was_pressed = False
+            last_error = ""
             while not self._button_stop.is_set():
-                pressed = self.gpio.is_button_pressed()
+                try:
+                    pressed = self.gpio.is_button_pressed()
+                    last_error = ""
+                except Exception as exc:
+                    error_text = repr(exc)
+                    if error_text != last_error:
+                        self.log.error(f"ボタン監視エラー: {error_text}")
+                        last_error = error_text
+                    time.sleep(interval)
+                    continue
                 if pressed and not was_pressed:
                     self._handle_button_press()
                 was_pressed = pressed
@@ -510,6 +524,7 @@ class MailLightMonitor:
             received = str(msg.get("receivedDateTime") or "")
             received_dt = self._parse_received_datetime(received)
             metric = self._ensure_host_metric(host)
+            prev_status = str(metric.get("status") or "")
             host_ip = self._extract_host_ip(body_text)
             severity = self._extract_severity(body_text)
 
@@ -529,11 +544,12 @@ class MailLightMonitor:
             )
 
             if status == "problem":
-                metric["problem_started_at"] = received
+                if prev_status != "problem" or host not in self._open_problem_since:
+                    metric["problem_started_at"] = received
+                    if received_dt:
+                        self._open_problem_since[host] = received_dt
                 metric["ongoing_problem_seconds"] = None
                 metric["ongoing_problem_text"] = ""
-                if received_dt:
-                    self._open_problem_since[host] = received_dt
             elif status == "ok":
                 metric["last_resolved_at"] = received
                 metric["ongoing_problem_seconds"] = None
@@ -549,15 +565,14 @@ class MailLightMonitor:
                 metric["ongoing_problem_seconds"] = None
                 metric["ongoing_problem_text"] = ""
 
-            if not latest_subject:
-                latest_subject = subject
-                latest_received = received
+            latest_subject = subject
+            latest_received = received
 
         self._host_states = host_states
         overall, leds, reason = self._aggregate(host_states)
         self.log.info(f"初回判定完了: overall={overall} / {reason}")
         effective_leds = leds
-        if self._silenced_by_button:
+        if self._silenced_by_button and overall == "high":
             effective_leds = self._silenced_leds()
             reason = f"{reason}（ボタンで消灯中）"
 
@@ -576,7 +591,7 @@ class MailLightMonitor:
         )
 
     def _process_incremental(self, messages: List[Dict[str, object]]) -> LightState:
-        events: List[Tuple[str, str, str, str]] = []
+        events: List[Tuple[str, str, str, str, str]] = []
         for msg in reversed(messages):
             message_id = str(msg.get("id") or "")
             if not message_id or message_id in self._processed_ids:
@@ -599,6 +614,7 @@ class MailLightMonitor:
             self._host_states[host] = status
             received = str(msg.get("receivedDateTime") or "")
             received_dt = self._parse_received_datetime(received)
+            prev_status = str(metric.get("status") or "")
             host_ip = self._extract_host_ip(body_text)
             severity = self._extract_severity(body_text)
 
@@ -617,11 +633,12 @@ class MailLightMonitor:
             )
 
             if status == "problem":
-                metric["problem_started_at"] = received
+                if prev_status != "problem" or host not in self._open_problem_since:
+                    metric["problem_started_at"] = received
+                    if received_dt:
+                        self._open_problem_since[host] = received_dt
                 metric["ongoing_problem_seconds"] = None
                 metric["ongoing_problem_text"] = ""
-                if received_dt:
-                    self._open_problem_since[host] = received_dt
             elif status == "ok":
                 metric["last_resolved_at"] = received
                 metric["ongoing_problem_seconds"] = None
@@ -637,17 +654,27 @@ class MailLightMonitor:
                 metric["ongoing_problem_seconds"] = None
                 metric["ongoing_problem_text"] = ""
 
-            events.append((host, status, subject, received))
+            events.append((host, status, subject, received, severity))
 
         overall, leds, default_reason = self._aggregate(self._host_states)
 
         if events:
-            host, status, subject, received = events[-1]
-            self._silenced_by_button = False
-            self.gpio.apply_main_lights(leds)
-            if overall == "high" and status != "ok":
+            host, status, subject, received, _ = events[-1]
+            should_alert = any(
+                event_status == "problem" and self._is_high_or_above(event_severity)
+                for _, event_status, _, _, event_severity in events
+            )
+            if should_alert:
+                self._silenced_by_button = False
+            effective_leds = leds
+            if self._silenced_by_button and overall == "high":
+                effective_leds = self._silenced_leds()
+            self.gpio.apply_main_lights(effective_leds)
+            if should_alert:
                 self.gpio.buzz(2, off_sec=0.2)
             reason = f"{host} が {status} に更新されました。"
+            if self._silenced_by_button and overall == "high":
+                reason = f"{reason}（ボタンで消灯中）"
             self.log.info(f"判定更新: overall={overall} / {reason}")
             return LightState(
                 overall=overall,
@@ -655,7 +682,7 @@ class MailLightMonitor:
                 updated_at=self._now_iso(),
                 mail_subject=subject,
                 mail_received_at=received,
-                leds=leds,
+                leds=effective_leds,
                 host_states=dict(self._host_states),
                 host_metrics=self._build_host_metrics_view(),
                 gpio_status=self.gpio.get_status(),
@@ -665,7 +692,7 @@ class MailLightMonitor:
 
         effective_leds = leds
         reason = default_reason
-        if self._silenced_by_button:
+        if self._silenced_by_button and overall == "high":
             effective_leds = self._silenced_leds()
             reason = f"{default_reason}（ボタンで消灯中）"
         self.gpio.apply_main_lights(effective_leds)
@@ -687,12 +714,12 @@ class MailLightMonitor:
         return self.log.get()
 
     def refresh_once(self) -> Dict[str, object]:
-        top_n = max(self.settings.test_top, self.settings.pi_top)
+        top_n = self.settings.pi_top if self._running_on_pi else self.settings.test_top
         messages = self.client.get_messages(
-            top=top_n,
+            top=max(1, int(top_n)),
             folder=self.settings.mail_folder,
             recipient=self.settings.target_recipient,
-            unread_only=False,
+            unread_only=self.settings.unread_only,
         )
         if not self._initialized:
             new_state = self._build_snapshot_state(messages)

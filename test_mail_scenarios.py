@@ -223,6 +223,61 @@ SCENARIOS: Dict[str, Scenario] = {
             ],
         ],
     ),
+    "warning_while_high": Scenario(
+        name="warning_while_high",
+        summary="high 障害継続中に別ホストの warning を受信",
+        expectation="overall=high のまま、warning ではブザー追加なし",
+        batches=[
+            [],
+            [
+                _problem_message(
+                    message_id="msg-high-4",
+                    host="db04",
+                    severity="high",
+                    received="2026-03-06T00:04:00Z",
+                )
+            ],
+            [
+                _warning_message(
+                    message_id="msg-warning-4",
+                    host="app04",
+                    received="2026-03-06T00:04:30Z",
+                ),
+                _problem_message(
+                    message_id="msg-high-4",
+                    host="db04",
+                    severity="high",
+                    received="2026-03-06T00:04:00Z",
+                ),
+            ],
+        ],
+    ),
+    "repeated_problem_duration": Scenario(
+        name="repeated_problem_duration",
+        summary="同一ホストの problem 再通知後に復旧",
+        expectation="復旧時間は最初の problem から計算される",
+        batches=[
+            [
+                _resolved_message(
+                    message_id="msg-resolved-5",
+                    host="db05",
+                    received="2026-03-06T00:10:00Z",
+                ),
+                _problem_message(
+                    message_id="msg-problem-5b",
+                    host="db05",
+                    severity="high",
+                    received="2026-03-06T00:05:00Z",
+                ),
+                _problem_message(
+                    message_id="msg-problem-5a",
+                    host="db05",
+                    severity="high",
+                    received="2026-03-06T00:00:00Z",
+                ),
+            ],
+        ],
+    ),
     "ignored_mail": Scenario(
         name="ignored_mail",
         summary="判定対象外メールを受信",
@@ -309,9 +364,10 @@ def _build_settings() -> Settings:
         scopes=None,
         buzzer_pin=5,
         button_enabled=False,
-        button_pin=21,
+        button_pin=12,
         button_pull="up",
         button_poll_interval=0.1,
+        client_secret_expires_at=None,
     )
 
 

@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>zabix-alarm 総合説明書</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 18mm 16mm 20mm 16mm;
+    @bottom-center {
+      content: "zabix-alarm 説明書 — " counter(page) " / " counter(pages);
+      font-size: 9pt;
+      color: #888;
+    }
+  }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
+      "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.65;
+    color: #1d1d1f;
+    margin: 0;
+  }
+  h1, h2, h3, h4 { font-weight: 700; line-height: 1.35; }
+  h1 { font-size: 22pt; margin: 0 0 12pt; }
+  h2 {
+    font-size: 15pt;
+    margin: 22pt 0 8pt;
+    padding-bottom: 4pt;
+    border-bottom: 2px solid #1d1d1f;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    margin: 14pt 0 4pt;
+    color: #2c2c2e;
+    page-break-after: avoid;
+  }
+  h4 { font-size: 11pt; margin: 10pt 0 4pt; color: #444; }
+  p { margin: 0 0 7pt; text-align: justify; }
+  ul, ol { margin: 0 0 8pt; padding-left: 22pt; }
+  li { margin-bottom: 3pt; }
+  code {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 9.5pt;
+    background: #f2f2f4;
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+  pre {
+    background: #f7f7f9;
+    border: 1px solid #e2e2e6;
+    border-left: 3px solid #555;
+    padding: 8pt 10pt;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 9pt;
+    line-height: 1.5;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 6pt 0 10pt;
+    page-break-inside: avoid;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 6pt 0 10pt;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid #d2d2d7;
+    padding: 4pt 7pt;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #efeff2; font-weight: 700; }
+  .cover {
+    text-align: center;
+    height: 250mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    page-break-after: always;
+  }
+  .cover .title { font-size: 36pt; font-weight: 800; letter-spacing: 2px; }
+  .cover .subtitle { font-size: 16pt; margin-top: 14pt; color: #555; }
+  .cover .meta {
+    margin-top: 60pt;
+    font-size: 11pt;
+    color: #444;
+    line-height: 2;
+  }
+  .cover .badge {
+    display: inline-block;
+    margin-top: 30pt;
+    padding: 6pt 18pt;
+    background: #1d1d1f;
+    color: #fff;
+    border-radius: 4px;
+    font-size: 11pt;
+    letter-spacing: 1px;
+  }
+  .toc { page-break-after: always; }
+  .toc ol { padding-left: 18pt; }
+  .toc li { margin-bottom: 4pt; }
+  .note {
+    background: #fff8e1;
+    border-left: 3px solid #f9a825;
+    padding: 6pt 10pt;
+    margin: 8pt 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  .warn {
+    background: #ffebee;
+    border-left: 3px solid #c62828;
+    padding: 6pt 10pt;
+    margin: 8pt 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  .ok {
+    background: #e8f5e9;
+    border-left: 3px solid #2e7d32;
+    padding: 6pt 10pt;
+    margin: 8pt 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+  }
+  .pin-table td.pin { font-family: ui-monospace, monospace; text-align: center; width: 60pt; }
+  .level-row { display: flex; gap: 8pt; margin: 6pt 0 10pt; }
+  .level-card {
+    flex: 1;
+    border: 1px solid #d2d2d7;
+    border-radius: 4px;
+    padding: 8pt 10pt;
+    page-break-inside: avoid;
+  }
+  .level-card.high { border-left: 4px solid #c62828; }
+  .level-card.normal { border-left: 4px solid #2e7d32; }
+  .level-card.unknown { border-left: 4px solid #6d6d6d; }
+  .level-card .name { font-weight: 700; font-size: 11pt; }
+  .level-card .desc { font-size: 9.5pt; color: #444; margin-top: 2pt; }
+  section { page-break-before: always; }
+  section.first { page-break-before: avoid; }
+  .small { font-size: 9pt; color: #666; }
+  .kbd {
+    display: inline-block;
+    border: 1px solid #c0c0c4;
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 0 5px;
+    font-size: 9.5pt;
+    font-family: ui-monospace, monospace;
+    background: #fafafa;
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================== 表紙 ======================== -->
+<div class="cover">
+  <div class="title">zabix-alarm</div>
+  <div class="subtitle">総合説明書</div>
+  <div class="meta">
+    Zabbix アラートメール監視 + Raspberry Pi 通知システム<br>
+    バージョン: 2026-04-28 時点<br>
+    対象: 運用担当・開発者・引き継ぎ者
+  </div>
+  <div class="badge">FOR INTERNAL USE</div>
+</div>
+
+<!-- ======================== 目次 ======================== -->
+<section class="toc first">
+  <h1>目次</h1>
+  <ol>
+    <li>システム概要</li>
+    <li>システム全体構成</li>
+    <li>ハードウェア仕様 / GPIO ピン配置</li>
+    <li>ソフトウェア構成（ファイル一覧）</li>
+    <li>動作仕様（判定ロジック・LED/ブザー）</li>
+    <li>初回セットアップ手順</li>
+    <li>Git 運用ルール</li>
+    <li>デプロイ運用（Gitea Actions）</li>
+    <li>Web ダッシュボード解説</li>
+    <li>トラブルシューティング</li>
+    <li>開発者向け情報（テスト・ローカル開発）</li>
+  </ol>
+</section>
+
+<!-- ======================== 1. システム概要 ======================== -->
+<section>
+  <h1>1. システム概要</h1>
+  <p>
+    <strong>zabix-alarm</strong> は、Zabbix が送信するアラートメールを
+    Microsoft 365 メールボックス上で監視し、その内容に応じて Raspberry Pi に
+    接続された LED とブザーで物理的な障害通知を行うシステムである。
+    Web ダッシュボードからリアルタイムに障害状況・ホスト一覧・操作ログを
+    閲覧でき、ボタン押下で通知音を一時停止することもできる。
+  </p>
+
+  <h3>1.1 設計の前提</h3>
+  <ul>
+    <li>監視対象のアラートは <strong>Zabbix</strong> から特定メールボックス宛に届く</li>
+    <li>メールアクセスは <strong>Microsoft Graph API</strong>（MSAL によるアプリ認証）</li>
+    <li>判定対象は <code>high</code>・<code>disaster</code> 相当の重大度のみ通知に反映</li>
+    <li>復旧（Resolved）メールはステータス更新のみで音は鳴らさない</li>
+  </ul>
+
+  <h3>1.2 主な機能</h3>
+  <ul>
+    <li>メールフォルダの定期ポーリングと判定</li>
+    <li>赤 LED 点灯 + ブザー 2 回（重大障害検出時）</li>
+    <li>緑 LED 点滅（起動時の初回判定待機表示）</li>
+    <li>ボタン押下で LED 消灯 + ブザー 1 回（音だけ静かにしたいとき用）</li>
+    <li>Web ダッシュボードでホスト別状態 / ログ / 動作中バージョンを表示</li>
+    <li>Gitea Actions による Mac → ラズパイの自動デプロイ</li>
+  </ul>
+
+  <h3>1.3 通知レベル</h3>
+  <div class="level-row">
+    <div class="level-card high">
+      <div class="name">high / disaster</div>
+      <div class="desc">赤 LED 点灯。ブザー 2 回。Web は赤色表示。</div>
+    </div>
+    <div class="level-card normal">
+      <div class="name">normal（OK / 復旧）</div>
+      <div class="desc">通知なし、状態のみ更新。Web は緑色表示。</div>
+    </div>
+    <div class="level-card unknown">
+      <div class="name">unknown</div>
+      <div class="desc">未判定 / 該当メール未受信。Web は灰色表示。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== 2. システム全体構成 ======================== -->
+<section>
+  <h1>2. システム全体構成</h1>
+
+  <h3>2.1 構成要素</h3>
+  <table>
+    <tr><th>場所</th><th>役割</th><th>主な実体</th></tr>
+    <tr>
+      <td>Microsoft 365</td>
+      <td>監視対象メールボックス</td>
+      <td>Azure AD アプリ認証 / Graph API</td>
+    </tr>
+    <tr>
+      <td>Raspberry Pi (192.168.1.109)</td>
+      <td>本体。メール監視＋GPIO 通知＋Web</td>
+      <td><code>/home/raspi/Desktop/Mail2AlertLight</code><br>systemd: <code>mail2alertlight</code></td>
+    </tr>
+    <tr>
+      <td>Gitea (192.168.1.201:3000)</td>
+      <td>ソースコード管理 / Actions による自動デプロイ</td>
+      <td>リポジトリ <code>admin/center_zabbix_beacon</code></td>
+    </tr>
+    <tr>
+      <td>開発者の Mac</td>
+      <td>ソース編集 / push</td>
+      <td><code>~/dev/raspi</code></td>
+    </tr>
+  </table>
+
+  <h3>2.2 データフロー</h3>
+  <ol>
+    <li>Zabbix サーバが障害を検知 → 監視対象メールボックス宛にメール送信</li>
+    <li>ラズパイ上の <code>monitor_service.py</code> が Graph API でメール取得</li>
+    <li>メール本文から重大度・対象ホスト・状態を抽出して判定</li>
+    <li>判定結果に応じて GPIO（LED / ブザー）を制御</li>
+    <li>同時に内部状態を更新し、Flask の <code>/api/status</code> 経由で Web に反映</li>
+  </ol>
+
+  <h3>2.3 デプロイフロー</h3>
+  <ol>
+    <li>Mac で編集して <code>git push AIT-center-mac main</code></li>
+    <li>Gitea が push を検知 → <code>.gitea/workflows/deploy.yml</code> を起動</li>
+    <li>ラズパイ上の self-hosted runner（<code>act_runner</code>）がジョブを受信</li>
+    <li>runner が本番ディレクトリで <code>git fetch + reset --hard</code> → <code>pip install</code> → <code>systemctl restart</code></li>
+    <li>Web ダッシュボードの「動作中バージョン」で反映確認</li>
+  </ol>
+</section>
+
+<!-- ======================== 3. ハードウェア ======================== -->
+<section>
+  <h1>3. ハードウェア仕様 / GPIO ピン配置</h1>
+
+  <h3>3.1 機材</h3>
+  <ul>
+    <li>Raspberry Pi 4 / 5（aarch64 / arm64）</li>
+    <li>赤色 LED ×1（GPIO 26）</li>
+    <li>ブザー ×1（GPIO 5）</li>
+    <li>押しボタン ×1（GPIO 12、内部プルアップ）</li>
+    <li>抵抗・配線材一式</li>
+  </ul>
+  <div class="note">
+    GPIO 6（緑）と GPIO 13（黄）はコード上に定義は残るが、現運用では赤・ブザー・ボタンのみ使用。
+    緑 LED 点滅は「起動時の初回判定待機」の状態フラグとして残されている。
+  </div>
+
+  <h3>3.2 GPIO ピン配置（BCM 番号）</h3>
+  <table class="pin-table">
+    <tr><th>用途</th><th class="pin">GPIO</th><th>配線方向</th><th>動作</th></tr>
+    <tr><td>ブザー</td><td class="pin">5</td><td>OUT</td><td>HIGH で鳴動</td></tr>
+    <tr><td>LED 緑（予備）</td><td class="pin">6</td><td>OUT</td><td>起動時点滅で使用</td></tr>
+    <tr><td>LED 黄（予備）</td><td class="pin">13</td><td>OUT</td><td>現運用未使用</td></tr>
+    <tr><td>LED 赤</td><td class="pin">26</td><td>OUT</td><td>重大障害検出時 ON</td></tr>
+    <tr><td>消灯ボタン</td><td class="pin">12</td><td>IN (pull-up)</td><td>押下で LED 消灯 + ブザー 1 回</td></tr>
+  </table>
+
+  <h3>3.3 ハードウェア単体テスト</h3>
+  <p>配線確認・点灯確認は <code>gpio_test.py</code> で行う。</p>
+<pre><code>python3 gpio_test.py test-all          # 全LED + ブザーを順次ON/OFF
+python3 gpio_test.py red-on           # 赤LEDだけON
+python3 gpio_test.py button-watch     # ボタン入力をリアルタイム表示
+</code></pre>
+</section>
+
+<!-- ======================== 4. ソフトウェア構成 ======================== -->
+<section>
+  <h1>4. ソフトウェア構成（ファイル一覧）</h1>
+  <table>
+    <tr><th>ファイル / ディレクトリ</th><th>役割</th></tr>
+    <tr><td><code>start_system.py</code></td><td>エントリーポイント。依存インストール → Flask + 監視を起動</td></tr>
+    <tr><td><code>web_app.py</code></td><td>Web ダッシュボード（HTML / CSS / JS を埋め込み）と REST API（<code>/api/status</code>, <code>/api/logs</code>, <code>/api/version</code>）</td></tr>
+    <tr><td><code>web_dev.py</code></td><td>UI 開発専用ローカルサーバ。GPIO・Graph に接続せずモック値を返す</td></tr>
+    <tr><td><code>monitor_service.py</code></td><td>メール取得→判定→GPIO 制御のコアループ</td></tr>
+    <tr><td><code>graph_client.py</code></td><td>Microsoft Graph API クライアント（MSAL アプリ認証）</td></tr>
+    <tr><td><code>settings.py</code></td><td>環境変数からの設定読み込み</td></tr>
+    <tr><td><code>env_loader.py</code></td><td><code>.env</code> のパーサー</td></tr>
+    <tr><td><code>utils.py</code></td><td>プラットフォーム検出（macOS / Linux / Pi）</td></tr>
+    <tr><td><code>gpio_test.py</code></td><td>GPIO 単体動作テストツール</td></tr>
+    <tr><td><code>test_mail_scenarios.py</code></td><td>メール判定ロジックのシナリオテスト</td></tr>
+    <tr><td><code>install_autostart.sh</code></td><td>systemd サービス（<code>mail2alertlight</code>）登録スクリプト</td></tr>
+    <tr><td><code>.gitea/workflows/deploy.yml</code></td><td>Gitea Actions による自動デプロイ定義</td></tr>
+    <tr><td><code>requirements.txt</code></td><td>Python 依存（msal / requests / python-dotenv / Flask）</td></tr>
+    <tr><td><code>.env</code></td><td>Azure 認証情報など秘密情報。<strong>git 管理外</strong></td></tr>
+    <tr><td><code>仕様.md</code> / <code>テストコマンド.md</code></td><td>過去経緯・テスト手順のメモ</td></tr>
+  </table>
+</section>
+
+<!-- ======================== 5. 動作仕様 ======================== -->
+<section>
+  <h1>5. 動作仕様</h1>
+
+  <h3>5.1 起動シーケンス</h3>
+  <ol>
+    <li>systemd が <code>start_system.py --skip-install</code> を起動</li>
+    <li>Flask Web サーバ（<code>0.0.0.0:8080</code>）と監視スレッドが立ち上がる</li>
+    <li>初回メール判定が完了するまで <strong>緑 LED が点滅</strong>（起動中表示）</li>
+    <li>判定が確定したら点滅停止、結果に応じた状態に遷移</li>
+  </ol>
+
+  <h3>5.2 通常ループ</h3>
+  <ul>
+    <li>設定された <code>MAIL_POLL_INTERVAL</code>（既定値）ごとに最新メールを取得</li>
+    <li>件名・本文から重大度（high / disaster / average / 復旧）を抽出</li>
+    <li>ホスト単位の状態テーブルを更新し、全体の <code>overall</code> を計算</li>
+    <li>状態が前回と変わっていれば LED とブザーを操作、ログに記録</li>
+    <li>判定に該当しないメールは WARN ログに記録（取りこぼし監視のため）</li>
+  </ul>
+
+  <h3>5.3 ボタン仕様</h3>
+  <ul>
+    <li>GPIO 12 を pull-up で入力。押下で GND に落ちる</li>
+    <li>押下 → LED と赤・ブザーを消灯（<strong>silenced</strong> 状態）</li>
+    <li>silenced 中に新しい重大障害メールが入れば、改めて点灯・鳴動</li>
+    <li>ステータス表示（<code>overall</code>）はボタンでは変えない</li>
+  </ul>
+
+  <h3>5.4 復旧時の挙動</h3>
+  <p>
+    過去の重大障害が解消された場合、ホスト状態は <code>ok</code> に戻るが、
+    <strong>音や LED は鳴らさない</strong>。これは「復旧通知が連続するメール群で
+    繰り返し鳴る」のを避けるためで、運用中の意図的な仕様である。
+  </p>
+</section>
+
+<!-- ======================== 6. 初回セットアップ手順 ======================== -->
+<section>
+  <h1>6. 初回セットアップ手順</h1>
+
+  <h3>6.1 Azure / Microsoft 365 側</h3>
+  <ol>
+    <li>Azure ポータルでアプリ登録（アプリケーション ID、テナント ID を取得）</li>
+    <li>API 権限: <code>Mail.Read</code>（アプリケーション権限）を付与し、管理者の同意を取得</li>
+    <li>クライアントシークレットを発行（<strong>2026/11/10 期限</strong> の点に注意）</li>
+    <li>監視対象メールボックスのオブジェクト ID を控える</li>
+  </ol>
+
+  <h3>6.2 ラズパイ側</h3>
+<pre><code># リポジトリ取得（既存ならスキップ）
+cd /home/raspi/Desktop
+git clone http://192.168.1.201:3000/admin/center_zabbix_beacon.git Mail2AlertLight
+cd Mail2AlertLight
+git remote rename origin AIT-center-mac
+
+# Python 仮想環境
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+# .env 設定（.env.example 参照）
+cp .env.example .env
+nano .env   # APP_ID / OBJECT_ID / TENANT_ID / CLIENT_SECRET / MAILBOX_USER
+
+# systemd 自動起動
+sudo bash install_autostart.sh
+sudo systemctl status mail2alertlight
+</code></pre>
+
+  <h3>6.3 sudoers 設定（自動デプロイ用）</h3>
+  <p>Actions のジョブが <code>sudo systemctl restart</code> をパスワードなしで叩けるよう設定する。</p>
+<pre><code>sudo visudo -f /etc/sudoers.d/mail2alertlight
+# 以下を1行貼り付け
+raspi ALL=(ALL) NOPASSWD: /bin/systemctl restart mail2alertlight, /bin/systemctl is-active mail2alertlight, /bin/systemctl status mail2alertlight
+</code></pre>
+
+  <h3>6.4 Gitea Actions runner（act_runner）</h3>
+<pre><code># バイナリ取得（aarch64 / Pi 4・5）
+cd ~
+wget https://gitea.com/gitea/act_runner/releases/download/v0.5.0/act_runner-0.5.0-linux-arm64 -O act_runner
+chmod +x act_runner
+sudo mv act_runner /usr/local/bin/
+
+# 登録（ホスト実行モード）
+mkdir -p ~/act_runner && cd ~/act_runner
+act_runner register \
+  --no-interactive \
+  --instance http://192.168.1.201:3000 \
+  --token &lt;Gitea で発行した runner token&gt; \
+  --name raspi \
+  --labels "raspi:host"
+
+# systemd 常駐化
+sudo tee /etc/systemd/system/act_runner.service &gt;/dev/null &lt;&lt;'EOF'
+[Unit]
+Description=Gitea act_runner
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=raspi
+WorkingDirectory=/home/raspi/act_runner
+ExecStart=/usr/local/bin/act_runner daemon
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now act_runner
+</code></pre>
+
+  <div class="ok">
+    Gitea 管理画面 → Actions → Runners に <code>raspi (Online)</code> が出れば成功。
+  </div>
+</section>
+
+<!-- ======================== 7. Git 運用ルール ======================== -->
+<section>
+  <h1>7. Git 運用ルール</h1>
+
+  <h3>7.1 リモートと役割</h3>
+  <table>
+    <tr><th>リモート名</th><th>URL</th><th>役割</th></tr>
+    <tr>
+      <td><code>AIT-center-mac</code></td>
+      <td><code>http://192.168.1.201:3000/admin/center_zabbix_beacon.git</code></td>
+      <td><strong>本番デプロイのトリガ元</strong>。push すると Gitea Actions が走り、ラズパイへ自動反映</td>
+    </tr>
+  </table>
+  <div class="note">
+    自動デプロイを発火させるには <strong>必ず <code>AIT-center-mac</code> の <code>main</code> に push</strong> する。
+  </div>
+
+  <h3>7.2 ブランチ戦略</h3>
+  <ul>
+    <li>本番ブランチは <code>main</code> 一本。<code>main</code> への push が即デプロイになる</li>
+    <li>大きめの変更は <code>feat/xxx</code>・<code>fix/xxx</code> のローカルブランチで作業 → 動作確認後に <code>main</code> へマージして push</li>
+    <li>マージは <code>--no-ff</code> でなくともよい（履歴が複雑なら <code>--squash</code> 推奨）</li>
+    <li>強制 push（<code>--force</code> / <code>--force-with-lease</code>）は <strong>禁止</strong>。runner の reset を狂わせる可能性</li>
+  </ul>
+
+  <h3>7.3 コミットメッセージ規約（Conventional Commits）</h3>
+  <table>
+    <tr><th>プレフィックス</th><th>用途</th></tr>
+    <tr><td><code>feat:</code></td><td>新機能の追加</td></tr>
+    <tr><td><code>fix:</code></td><td>バグ修正</td></tr>
+    <tr><td><code>chore:</code></td><td>雑務（依存更新、ファイル整理など）</td></tr>
+    <tr><td><code>docs:</code></td><td>ドキュメントのみの変更</td></tr>
+    <tr><td><code>refactor:</code></td><td>挙動を変えないコード整理</td></tr>
+    <tr><td><code>test:</code></td><td>テスト追加・修正</td></tr>
+  </table>
+  <p>例:</p>
+<pre><code>fix: rootユーザーで git rev-parse が失敗しないよう safe.directory を指定
+feat: ログセクションを折りたたみ可能に変更
+docs: READMEに動作中バージョン表示と折りたたみログ、Actions ファイルを追記
+</code></pre>
+
+  <h3>7.4 git 管理対象 / 管理外</h3>
+  <table>
+    <tr><th>ファイル</th><th>扱い</th><th>理由</th></tr>
+    <tr><td><code>.env</code></td><td>管理外（<code>.gitignore</code> で除外）</td><td>Azure 認証情報など機密。漏洩したら即時シークレット再発行</td></tr>
+    <tr><td><code>.venv/</code></td><td>管理外</td><td>環境固有の Python 仮想環境</td></tr>
+    <tr><td><code>__pycache__/</code></td><td>管理外</td><td>Python のバイトコードキャッシュ</td></tr>
+    <tr><td><code>msal_token_cache.bin</code></td><td>管理外</td><td>MSAL のトークンキャッシュ。再ログインで再生成可能</td></tr>
+    <tr><td><code>docs/manual.pdf</code></td><td>運用に応じて選択</td><td>HTML から再生成可能。差分管理が重いので除外しても可</td></tr>
+  </table>
+
+  <h3>7.5 ラズパイ側の git の使い方（重要）</h3>
+  <div class="warn">
+    <strong>ラズパイ側で直接コードを編集しないこと。</strong>
+    自動デプロイのジョブが <code>git reset --hard AIT-center-mac/main</code> を実行するため、
+    ラズパイ上での未コミットの変更や独自コミットは次回デプロイで全て破棄される。
+    必ず Mac 側でコミット → push する運用を守る。
+  </div>
+
+  <h3>7.6 Mac から push する標準手順</h3>
+<pre><code># 状態確認
+git status
+git diff
+
+# ステージとコミット
+git add &lt;変更ファイル&gt;
+git commit -m "fix: 障害ホスト判定の取りこぼしを修正"
+
+# push（自動デプロイ発火）
+git push AIT-center-mac main
+</code></pre>
+
+  <h3>7.7 ラズパイで現状を確認したいとき</h3>
+<pre><code>cd /home/raspi/Desktop/Mail2AlertLight
+git log -1 --oneline           # 動いているコミット
+git status                     # 余計な変更が混じっていないか確認
+git fetch AIT-center-mac
+git log HEAD..AIT-center-mac/main --oneline   # 未反映のコミット
+</code></pre>
+  <p>
+    Web UI の「動作中バージョン」項目でも同じ情報が確認できる。
+    SSH で入る前に、まずブラウザでハッシュを見るのが楽。
+  </p>
+
+  <h3>7.8 認証情報の取り扱い</h3>
+  <ul>
+    <li>Gitea のパスワードは <code>git config credential.helper store</code> でラズパイにのみ保存（平文 <code>~/.git-credentials</code>。ローカルネットワーク前提のため許容）</li>
+    <li>Mac 側は macOS Keychain に保存される（<code>credential.helper=osxkeychain</code> がデフォルト）</li>
+    <li>Azure 認証情報は <code>.env</code> のみに置く。コミットや Slack 等への貼り付け禁止</li>
+  </ul>
+
+  <h3>7.9 トラブル時の安全な戻し方</h3>
+  <p>
+    本番でおかしくなった場合、リバートコミットを作って push するのが基本。
+    ラズパイ上で直接 <code>git reset --hard &lt;古いハッシュ&gt;</code> しても、
+    次回 push で再上書きされるので根本解決にならない。
+  </p>
+<pre><code># Mac で
+git revert &lt;問題のコミット&gt;
+git push AIT-center-mac main
+# → Actions が走り、ラズパイがリバート版に更新される
+</code></pre>
+</section>
+
+<!-- ======================== 8. デプロイ運用 ======================== -->
+<section>
+  <h1>8. デプロイ運用（Gitea Actions）</h1>
+
+  <h3>7.1 ワークフロー定義</h3>
+  <p>リポジトリの <code>.gitea/workflows/deploy.yml</code>:</p>
+<pre><code>name: deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: raspi
+    steps:
+      - name: 本番ディレクトリを最新コミットに更新
+        run: |
+          set -euxo pipefail
+          cd /home/raspi/Desktop/Mail2AlertLight
+          git fetch AIT-center-mac
+          git reset --hard AIT-center-mac/main
+          .venv/bin/pip install -r requirements.txt
+          sudo systemctl restart mail2alertlight
+          sudo systemctl is-active mail2alertlight
+</code></pre>
+
+  <h3>7.2 普段の運用</h3>
+<pre><code>cd ~/dev/raspi
+git add &lt;変更ファイル&gt;
+git commit -m "fix: ..."
+git push AIT-center-mac main
+</code></pre>
+
+  <h3>7.3 反映確認</h3>
+  <ol>
+    <li>Gitea のリポジトリ → <strong>Actions</strong> タブで <code>deploy</code> ワークフローが Success になる</li>
+    <li><code>http://192.168.1.109:8080/</code> をリロード</li>
+    <li>「動作中バージョン」項目のハッシュが <code>git rev-parse --short HEAD</code> と一致</li>
+  </ol>
+
+  <div class="warn">
+    <strong>注意:</strong> ラズパイ側のローカル変更は <code>git reset --hard</code> で破棄される。
+    ラズパイ上で直接コードを編集する運用は <strong>禁止</strong>。
+    必ず Mac でコミットして push すること。
+  </div>
+</section>
+
+<!-- ======================== 9. Web ダッシュボード ======================== -->
+<section>
+  <h1>9. Web ダッシュボード解説</h1>
+  <p>URL: <code>http://192.168.1.109:8080/</code></p>
+
+  <h3>9.1 表示項目</h3>
+  <table>
+    <tr><th>項目</th><th>意味</th></tr>
+    <tr><td>大見出し（緑/赤/灰）</td><td>システム全体の現在状態（normal / high / unknown）</td></tr>
+    <tr><td>原因</td><td>判定の根拠となったメール件名や状況サマリ</td></tr>
+    <tr><td>判定更新時刻</td><td>最後に判定が更新された時刻</td></tr>
+    <tr><td>対象メール件名 / 受信時刻</td><td>判定根拠となった最新の Zabbix メール</td></tr>
+    <tr><td>ボタン状態</td><td>物理ボタンが現在押されているかどうか</td></tr>
+    <tr><td>最終押下時刻</td><td>ボタンが最後に押された時刻</td></tr>
+    <tr><td>動作中バージョン</td><td>現在動いているコードのコミットハッシュ + 件名 + 日時</td></tr>
+    <tr><td>ライト</td><td>BUZZER / RED の現在の出力状態</td></tr>
+    <tr><td>ホスト状態</td><td>ホスト別の状況カード（problem / warning / ok / unknown）</td></tr>
+    <tr><td>ログ</td><td>判定更新やアラート検出のログ（折りたたみ可能）</td></tr>
+    <tr><td>GPIOステータス（モーダル）</td><td>各 GPIO の現在の出力 / 入力レベル一覧</td></tr>
+  </table>
+
+  <h3>9.2 REST API</h3>
+  <table>
+    <tr><th>エンドポイント</th><th>応答</th></tr>
+    <tr><td><code>GET /api/status</code></td><td>現在の状態（overall / reason / ホスト別 / GPIO / ボタン）</td></tr>
+    <tr><td><code>GET /api/logs</code></td><td>直近の判定ログ配列</td></tr>
+    <tr><td><code>GET /api/version</code></td><td>動作中コミットの <code>{short, full, subject, committed_at}</code></td></tr>
+  </table>
+
+  <h3>9.3 ローカル UI 開発</h3>
+<pre><code>.venv/bin/python web_dev.py
+# ブラウザ: http://localhost:8080/
+# WEB_PORT=8081 .venv/bin/python web_dev.py  でポート変更可
+</code></pre>
+  <p>
+    <code>web_dev.py</code> は GPIO・Graph に接続せず、10 秒周期で
+    <code>normal → high → unknown</code> をモックで切り替える。
+    HTML テンプレートは <code>web_app.py</code> 側を共有しているため、UI 修正時はそちらを編集する。
+  </p>
+</section>
+
+<!-- ======================== 10. トラブルシューティング ======================== -->
+<section>
+  <h1>10. トラブルシューティング</h1>
+
+  <h3>10.1 サービスの状態確認</h3>
+<pre><code>sudo systemctl status mail2alertlight
+sudo journalctl -u mail2alertlight -n 50 --no-pager
+sudo journalctl -u mail2alertlight -f       # ライブ追従
+</code></pre>
+
+  <h3>10.2 動作中バージョンが <code>unknown</code> と出る</h3>
+  <p>
+    systemd は root で動くため、raspi 所有の git ディレクトリで
+    <code>git rev-parse</code> を実行すると "dubious ownership" で失敗するケースがある。
+    現バージョンでは <code>web_app.py</code> 内で <code>-c safe.directory=...</code>
+    を渡して回避済み。それでも unknown が出る場合は <code>.git</code> の有無、
+    git バイナリの PATH、サービスの WorkingDirectory を確認する。
+  </p>
+
+  <h3>10.3 Web に接続できない</h3>
+  <ul>
+    <li>サービスが落ちている → <code>systemctl status</code> 確認</li>
+    <li>ポート競合 → <code>WEB_PORT</code> を別の値で再起動</li>
+    <li>同じ LAN にいない → ラズパイの IP（既定 192.168.1.109）で疎通確認</li>
+  </ul>
+
+  <h3>10.4 Actions が走らない / runner が Offline</h3>
+  <ul>
+    <li><code>sudo systemctl status act_runner</code> で daemon の生死確認</li>
+    <li>Gitea の管理画面 → Actions → Runners で再登録（古いトークンを削除）</li>
+    <li>Gitea 自体の Actions 機能が無効化されていないか確認</li>
+  </ul>
+
+  <h3>10.5 メールが取れない / 認証エラー</h3>
+  <ul>
+    <li><code>CLIENT_SECRET</code> の有効期限切れ（<strong>2026/11/10 期限</strong>）</li>
+    <li>Azure 側で <code>Mail.Read</code> 権限の管理者同意が外れていないか</li>
+    <li>テナント ID / アプリケーション ID の打ち間違い</li>
+    <li><code>msal_token_cache.bin</code> を削除して再取得を試す</li>
+  </ul>
+
+  <h3>10.6 LED やブザーが反応しない</h3>
+  <ul>
+    <li>配線・電源確認（特に GND の共通化）</li>
+    <li><code>python3 gpio_test.py test-all</code> で単体動作を確認</li>
+    <li><code>monitor_service.py</code> の判定ログに該当アラートが流れているか</li>
+  </ul>
+</section>
+
+<!-- ======================== 11. 開発者向け ======================== -->
+<section>
+  <h1>11. 開発者向け情報</h1>
+
+  <h3>11.1 ローカル開発フロー</h3>
+  <ol>
+    <li>Mac で <code>~/dev/raspi</code> を開いて編集</li>
+    <li>UI 変更だけなら <code>.venv/bin/python web_dev.py</code> でブラウザ確認</li>
+    <li>判定ロジック変更時は <code>test_mail_scenarios.py</code> でユニット相当のテスト</li>
+    <li>コミット → <code>git push AIT-center-mac main</code> → 自動デプロイ</li>
+  </ol>
+
+  <h3>11.2 メール判定シナリオテスト</h3>
+<pre><code>python3 test_mail_scenarios.py --list           # 利用可能なシナリオ一覧
+python3 test_mail_scenarios.py high_problem      # 個別シナリオ実行
+</code></pre>
+
+  <h3>11.3 重要なリポジトリ設定</h3>
+  <table>
+    <tr><th>項目</th><th>値</th></tr>
+    <tr><td>Mac → Gitea remote</td><td><code>AIT-center-mac</code> = <code>http://192.168.1.201:3000/admin/center_zabbix_beacon.git</code></td></tr>
+    <tr><td>本番ブランチ</td><td><code>main</code></td></tr>
+    <tr><td>Gitea Actions runner ラベル</td><td><code>raspi:host</code></td></tr>
+  </table>
+
+  <h3>11.4 設定ファイル</h3>
+  <p>
+    秘密情報は <code>.env</code>（git 管理外）。
+    新規セットアップ時は <code>.env.example</code> をコピーして使用する。
+    必須項目:
+  </p>
+  <ul>
+    <li><code>APP_ID</code> — Azure アプリケーション ID</li>
+    <li><code>OBJECT_ID</code> — メールボックスのオブジェクト ID</li>
+    <li><code>TENANT_ID</code> — Azure テナント ID</li>
+    <li><code>CLIENT_SECRET</code> — クライアントシークレット（期限 2026/11/10）</li>
+    <li><code>MAILBOX_USER</code> — 監視対象メールボックスのユーザー名</li>
+  </ul>
+
+  <h3>11.5 関連ドキュメント</h3>
+  <ul>
+    <li><code>README.md</code> — 概要と簡易セットアップ</li>
+    <li><code>SETUP.md</code> — 詳細セットアップ手順</li>
+    <li><code>仕様.md</code> — 過去の判定仕様メモ</li>
+    <li><code>テストコマンド.md</code> — シナリオテストとハードウェアテストのコマンド集</li>
+  </ul>
+
+  <div class="small" style="margin-top: 30pt; text-align: center; color: #888;">
+    — 本書は <code>docs/manual.html</code> から自動生成されたものである —
+  </div>
+</section>
+
+</body>
+</html>

@@ -164,6 +164,7 @@ class GraphClient:
         unread_only: bool,
     ) -> List[Dict[str, object]]:
         token = self.acquire_token()["access_token"]
+        mail_folder = quote((folder or "Inbox").strip() or "Inbox", safe="")
         select_fields = [
             "id",
             "subject",
@@ -186,7 +187,7 @@ class GraphClient:
             params["$filter"] = "isRead eq false"
 
         resp = requests.get(
-            f"{self._mailbox_base()}/mailFolders/{folder}/messages",
+            f"{self._mailbox_base()}/mailFolders/{mail_folder}/messages",
             headers=self._headers(token),
             params=params,
             timeout=30,
