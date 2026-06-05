@@ -723,8 +723,8 @@ HTML = """
     refresh();
     refreshLogs();
     loadVersion();
-    setInterval(refresh, 500);
-    setInterval(refreshLogs, 2000);
+    setInterval(refresh, 2000);
+    setInterval(refreshLogs, 5000);
   </script>
 </body>
 </html>

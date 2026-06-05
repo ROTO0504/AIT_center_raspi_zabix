@@ -15,5 +15,11 @@ jobs:
           git fetch AIT-center-mac
           git reset --hard AIT-center-mac/main
           .venv/bin/pip install -r requirements.txt
+          .venv/bin/python -m py_compile start_system.py env_loader.py settings.py utils.py graph_client.py monitor_service.py web_app.py web_dev.py gpio_test.py test_mail_scenarios.py
+          .venv/bin/python test_mail_scenarios.py startup_empty
+          .venv/bin/python test_mail_scenarios.py high_problem
+          .venv/bin/python test_mail_scenarios.py warning_while_high
+          .venv/bin/python test_mail_scenarios.py repeated_problem_duration
+          .venv/bin/python test_mail_scenarios.py high_then_button
           sudo systemctl restart mail2alertlight
           sudo systemctl is-active mail2alertlight

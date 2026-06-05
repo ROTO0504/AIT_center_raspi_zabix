@@ -47,7 +47,9 @@ def main() -> int:
     print("  - ボタン監視（有効時）")
 
     app = create_app()
-    app.run(host="0.0.0.0", port=args.port)
+    from waitress import serve
+
+    serve(app, host="0.0.0.0", port=args.port, threads=4)
     return 0
 
 
