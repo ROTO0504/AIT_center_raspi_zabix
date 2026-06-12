@@ -330,6 +330,11 @@ class MailLightMonitor:
                         last_error = error_text
                     time.sleep(interval)
                     continue
+                if pressed != was_pressed:
+                    level = "LOW(押下)" if pressed else "HIGH(解放)"
+                    self.log.info(
+                        f"GPIO{self.settings.button_pin} レベル変化: {level}"
+                    )
                 if pressed and not was_pressed:
                     self._handle_button_press()
                 was_pressed = pressed
